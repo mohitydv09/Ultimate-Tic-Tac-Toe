@@ -1,15 +1,5 @@
-# READ ME
-# REFER TO MAIN FUNCTION TO RUN THE CODE
-# FURTHER INSTUCTIONS WILL BE PROVIDED IN MAIN
-# THERE ARE 3 TOTAL FILES: GAMEUTTT.PY, PLAYERS.PY, AND HEURISTICS.PY
-# TO RUN THE PROGRAM, RUN GAMEUTTT.PY
-
-
-# Importing libraries
-import copy
 from copy import deepcopy
 import time
-# import heuristics as heu  # Importing a module named 'heuristics' as 'heu'
 
 # Defining Global Variables.
 EMPTY = '-'  # Symbol representing an empty cell on the game board
@@ -77,6 +67,7 @@ class UtttState:
         new_string += "-------------\n"
         # new_string += "Current Player: " + str(self.current.get_sign()) + "    Heuristic: " + str(self.heuristic) + "\n"
         return new_string
+    
 
 
 def terminal_test(state):
@@ -194,7 +185,6 @@ def search_test(player1, player2, num_iterations=1, printouts=True):
     print("Final score: [P1, P2, Tie]", score)
     print("Computational time: ", t_stop - ts, "s    Average: ", (t_stop - ts) / num_iterations, "s")
     return score
-
 
 def play_game(p1=None, p2=None, printouts=True):
     """Play the game with two players. Default use two humans."""
