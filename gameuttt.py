@@ -148,7 +148,6 @@ def actions(state):
                             legal_actions.append((mb, i, j))
     return legal_actions
 
-
 def result(state, action):
     """Returns the resulting state after taking the given action.
     Returns None if the action is not legal."""
