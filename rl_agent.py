@@ -15,6 +15,7 @@ class RLAgent:
         self.gamma = 0.9 ## Discount factor
         self.memory = deque(maxlen=MAX_MEMORY)
         self.model = Linear_QNet(81, 512, 81)
+        self.model.load()
         self.trainer = QTrainer(self.model, lr=0.001, gamma=self.gamma)
         self.sign = sign
 
@@ -110,6 +111,36 @@ def valid_actions2action_tensor(actions: List[tuple]) -> torch.tensor:
         action_tensor[mini_board*9 + row*3 + col] = 1
     return action_tensor
 
+rl_wins = 0
+rl_win_list = []
+
+def plot_stats(winners):
+    global rl_wins
+    if len(winners) < 100:
+        return
+    elif len(winners) == 100:
+        rl_wins = 0
+        for item in winners:
+            if item == "Rl":
+                rl_wins += 1
+        rl_win_list.append(rl_wins)
+    else:
+        if winners[-1] == "Rl":
+            rl_wins += 1
+        if winners[-101] == "Rl":
+            rl_wins -= 1
+        rl_win_list.append(rl_wins)
+    
+    clear_output(wait=True)
+    ax.clear()
+    ax.plot(rl_win_list, label="RL Wins")
+    ax.set_xlabel("Games")
+    ax.set_ylabel("Wins")
+    ax.legend()
+
+    plt.draw()
+    plt.pause(0.001)
+
 def train():
     winners = []
     rl_agent = RLAgent()
@@ -117,7 +148,7 @@ def train():
     random_player = RandomPlayer("O")
     game_state = UtttState(rl_agent, random_player)
 
-    for _ in range(50000):
+    for _ in range(100):
         
         state_tensor = rl_agent.get_state(game_state)
 
@@ -126,10 +157,15 @@ def train():
         if len(legal_actions) == 0:
             print("No Legal Actions for RL, match Tie")
             print(game_state)
+            if rl_agent.num_games > 2000:
+                random_player = AlphaBetaPlayer("O", depth_limit=1)
+            elif rl_agent.num_games > 4000:
+                random_player = AlphaBetaPlayer("O", depth_limit=2)
             game_state = UtttState(rl_agent, random_player)
             rl_agent.num_games += 1
             rl_agent.train_long_momory()
             winners.append("Tie")
+            plot_stats(winners)
             continue
 
         action_actual_tensor = valid_actions2action_tensor(legal_actions)
@@ -144,11 +180,16 @@ def train():
 
         if game_over:
             print("Game {:6} won by: RL".format(rl_agent.num_games))
-            # print(game_state)
+            print(game_state)
+            if rl_agent.num_games > 2000:
+                random_player = AlphaBetaPlayer("O", depth_limit=1)
+            elif rl_agent.num_games > 4000:
+                random_player = AlphaBetaPlayer("O", depth_limit=2)
             game_state = UtttState(rl_agent, random_player)
             rl_agent.num_games += 1
             rl_agent.train_long_momory()
             winners.append("Rl")
+            plot_stats(winners)
             continue
 
         # print("Move made by RL: ")
@@ -158,10 +199,15 @@ def train():
         if action_random is None:
             print("No Legal Actions for AB, match Tie")
             print(game_state)
+            if rl_agent.num_games > 2000:
+                random_player = AlphaBetaPlayer("O", depth_limit=1)
+            elif rl_agent.num_games > 4000:
+                random_player = AlphaBetaPlayer("O", depth_limit=2)
             game_state = UtttState(rl_agent, random_player)
             rl_agent.num_games += 1
             rl_agent.train_long_momory()
             winners.append("Tie")
+            plot_stats(winners)
             continue
         game_state = result(game_state, action_random)
         game_over_alpha_beta, winner_alpha_beta = terminal_test(game_state)
@@ -172,16 +218,26 @@ def train():
         if game_over_alpha_beta:
             print("Game {:6} won by: Alpha Beta".format(rl_agent.num_games))
             # print(game_state)
+            if rl_agent.num_games > 2000:
+                random_player = AlphaBetaPlayer("O", depth_limit=1)
+            elif rl_agent.num_games > 4000:
+                random_player = AlphaBetaPlayer("O", depth_limit=2)
             game_state = UtttState(rl_agent, random_player)
             rl_agent.num_games += 1
             rl_agent.train_long_momory()
             winners.append("AB")
+            plot_stats(winners)
             continue
-
+    rl_agent.model.save()
     return winners
 
+import matplotlib.pyplot as plt
+from IPython.display import clear_output
 from gameuttt import UtttState, terminal_test, terminal_test_mini, result, actions
 from players import RandomPlayer, HumanPlayer, MinimaxPlayer, AlphaBetaPlayer
+plt.ion()
+fig, ax = plt.subplots(figsize=(10, 4))
+
 
 if __name__ == "__main__":
     winners = train()

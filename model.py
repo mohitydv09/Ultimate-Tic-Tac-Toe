@@ -32,6 +32,14 @@ class Linear_QNet(nn.Module):
         file_name = os.path.join(model_folder_path, file_name)
         torch.save(self.state_dict(), file_name)
 
+    def load(self, file_name='model.pth'):
+        file_name = os.path.join('./model', file_name)
+        if os.path.exists(file_name):
+            self.load_state_dict(torch.load(file_name))
+            self.eval()
+        else:
+            print("No model found at the path: ", file_name, ". Model is randomly initialized.")
+
 class QTrainer:
     def __init__(self, model, lr, gamma):
         self.lr = lr
